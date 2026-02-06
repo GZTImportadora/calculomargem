@@ -42,3 +42,42 @@ function limpar(){
   document.getElementById('preco').value = '';
   document.getElementById('resultado').innerHTML = '';
 }
+
+let deferredPrompt = null;
+
+function isRunningAsPWA() {
+  return window.matchMedia("(display-mode: standalone)").matches
+    || window.navigator.standalone === true;
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  if (isRunningAsPWA()) return;
+
+  setTimeout(() => {
+    const modal = new bootstrap.Modal(document.getElementById("installModal"));
+    modal.show();
+  }, 1000);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnInstall = document.getElementById("btnInstallPWA");
+
+  if (!btnInstall) return;
+
+  btnInstall.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+
+    deferredPrompt = null;
+
+    const modalEl = document.getElementById("installModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  });
+});
+
